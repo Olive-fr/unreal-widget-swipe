@@ -242,6 +242,11 @@ public:
 		SLATE_ARGUMENT(bool, AnimateWheelSwipeing);
 
 		SLATE_ARGUMENT(float, WheelSwipeMultiplier);
+	
+		SLATE_ARGUMENT(EEasingFunc::Type, Easing);
+		SLATE_ARGUMENT(float, BlendExp);
+		SLATE_ARGUMENT(float, Speed);
+		SLATE_ARGUMENT(int, CurrentPageId);
 
 		SLATE_ARGUMENT(EDescendantScrollDestination, NavigationDestination);
 
@@ -288,6 +293,22 @@ public:
 	EAllowStickyswipe GetAllowStickySwipe() const;
 
 	void SetAllowStickySwipe(EAllowStickyswipe NewAllowStickySwipe);
+
+	EEasingFunc::Type GetEasing() const;
+
+	void SetEasing(EEasingFunc::Type NewEasing);
+
+	float GetBlendExp() const;
+
+	void SetBlendExp(float NewBlendExp);
+
+	float GetSpeed() const;
+
+	void SetSpeed(float NewSpeed);
+
+	int GetCurrentPage() const;
+
+	void SetCurrentPage(int NewPage);
 
 	void SetAnimateWheelSwipeing(bool bInAnimateWheelSwipeing);
 

@@ -99,6 +99,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "IsAnimateWheelSwipeing", Setter = "SetAnimateWheelSwipeing", BlueprintSetter = "SetAnimateWheelSwipeing", Category = "Swipe")
 	bool bAnimateWheelSwipeing = false;
 
+	UE_DEPRECATED(5.2, "Direct access to Easing is deprecated. Please use the getter or setter.")
+	/** True to lerp smoothly when wheel Swipeing along the Swipe box */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetEasing", Setter = "SetEasing", Category = "Swipe|Page Transition")
+	TEnumAsByte<EEasingFunc::Type> Easing;
+	
+	UE_DEPRECATED(5.2, "Direct access to BlendExp is deprecated. Please use the getter or setter.")
+	/** True to lerp smoothly when wheel Swipeing along the Swipe box */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetBlendExp", Setter = "SetBlendExp", Category = "Swipe|Page Transition")
+	float BlendExp;
+	
+	UE_DEPRECATED(5.2, "Direct access to Speed is deprecated. Please use the getter or setter.")
+	/** True to lerp smoothly when wheel Swipeing along the Swipe box */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetSpeed", Setter = "SetSpeed", Category = "Swipe|Page Transition")
+	float Speed;
+
 	UE_DEPRECATED(5.2, "Direct access to NavigationDestination is deprecated. Please use the getter or setter.")
 	/** Sets where to Swipe a widget to when using explicit navigation or if SwipeWhenFocusChanges is enabled */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter, Setter, BlueprintSetter = "SetNavigationDestination", Getter, Setter, Category = "Swipe")
@@ -179,6 +194,31 @@ public:
 	void SetAnimateWheelSwipeing(bool bShouldAnimateWheelSwipeing);
 
 	bool IsAnimateWheelSwipeing() const;
+
+	
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	EEasingFunc::Type GetEasing() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetEasing(EEasingFunc::Type NewEasing);
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	float GetBlendExp() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetBlendExp(float NewBlendExp);
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	float GetSpeed() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetSpeed(float NewSpeed);
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	int GetCurrentPage() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetCurrentPage(int32 NewCurrentPage);
 
 	UFUNCTION(BlueprintCallable, Category = "Swipe")
 	void SetWheelSwipeMultiplier(float NewWheelSwipeMultiplier);

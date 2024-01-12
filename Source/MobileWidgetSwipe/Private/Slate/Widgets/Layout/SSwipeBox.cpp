@@ -186,6 +186,10 @@ void SSwipeBox::Construct(const FArguments& InArgs)
 	bTouchPanningCapture = false;
 	bVolatilityAlwaysInvalidatesPrepass = true;
 
+	StickySwipe.SetBlendExp(InArgs._BlendExp);
+	StickySwipe.SetEasing(InArgs._Easing);
+	StickySwipe.SetSpeed(InArgs._Speed);
+
 
 	if (InArgs._ExternalSwipebar.IsValid())
 	{
@@ -1330,6 +1334,46 @@ void SSwipeBox::SetAllowStickySwipe(EAllowStickyswipe NewAllowStickySwipe)
 	{
 		StickySwipe.ResetStickyswipe();
 	}
+}
+
+EEasingFunc::Type SSwipeBox::GetEasing() const
+{
+	return StickySwipe.GetEasing();
+}
+
+void SSwipeBox::SetEasing(EEasingFunc::Type NewEasing)
+{
+	StickySwipe.SetEasing(NewEasing);
+}
+
+float SSwipeBox::GetBlendExp() const
+{
+	return StickySwipe.GetBlendExp();
+}
+
+void SSwipeBox::SetBlendExp(float NewBlendExp)
+{
+	StickySwipe.SetBlendExp(NewBlendExp);
+}
+
+float SSwipeBox::GetSpeed() const
+{
+	return StickySwipe.GetSpeed();
+}
+
+void SSwipeBox::SetSpeed(float NewSpeed)
+{
+	StickySwipe.SetSpeed(NewSpeed);
+}
+
+int SSwipeBox::GetCurrentPage() const
+{
+	return StickySwipe.GetCurrentPage();
+}
+
+void SSwipeBox::SetCurrentPage(int NewPage)
+{
+	StickySwipe.SetCurrentPage(NewPage);
 }
 
 void SSwipeBox::SetAnimateWheelSwipeing(bool bInAnimateWheelSwipeing)

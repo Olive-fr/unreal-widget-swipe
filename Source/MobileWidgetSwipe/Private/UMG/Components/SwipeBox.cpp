@@ -17,46 +17,49 @@
 
 USwipeBox::USwipeBox(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, Orientation(Orient_Vertical)
-	, SwipeBarVisibility(ESlateVisibility::Visible)
-	, ConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible)
-	, SwipeBarThickness(9.0f, 9.0f)
-	, SwipeBarPadding(2.0f)
-	, AlwaysShowSwipeBar(false)
-	, AlwaysShowSwipeBarTrack(false)
-	, AllowOverSwipe(true)
-	, AllowStickySwipe(true)
-	, BackPadSwipeing(false)
-	, FrontPadSwipeing(false)
-	, NavigationDestination(EDescendantScrollDestination::IntoView)
-	, NavigationSwipePadding(0.0f)
-	, SwipeWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+	  , Orientation(Orient_Vertical)
+	  , SwipeBarVisibility(ESlateVisibility::Visible)
+	  , ConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible)
+	  , SwipeBarThickness(9.0f, 9.0f)
+	  , SwipeBarPadding(2.0f)
+	  , AlwaysShowSwipeBar(false)
+	  , AlwaysShowSwipeBarTrack(false)
+	  , AllowOverSwipe(true)
+	  , AllowStickySwipe(true)
+	  , BackPadSwipeing(false)
+	  , FrontPadSwipeing(false)
+	  , NavigationDestination(EDescendantScrollDestination::IntoView)
+	  , NavigationSwipePadding(0.0f)
+	  , SwipeWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
+      , Easing(EEasingFunc::Linear)
+      , BlendExp(2.0)
+      , Speed(1.0)
 {
 	bIsVariable = false;
 
 	SetVisibilityInternal(ESlateVisibility::Visible);
 	SetClipping(EWidgetClipping::ClipToBounds);
-	
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+
+	PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	WidgetStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetRuntime().GetSwipeBoxStyle();
 	WidgetBarStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetRuntime().GetSwipeBarStyle();
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-#if WITH_EDITOR 
+#if WITH_EDITOR
 	if (IsEditorWidget())
 	{
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+		PRAGMA_DISABLE_DEPRECATION_WARNINGS
 		WidgetStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetEditor().GetSwipeBoxStyle();
 		WidgetBarStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetEditor().GetSwipeBarStyle();
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+		PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 		// The CDO isn't an editor widget and thus won't use the editor style, call post edit change to mark difference from CDO
 		PostEditChange();
 	}
 #endif // WITH_EDITOR
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+	PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	bAllowRightClickDragSwipeing = true;
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 }
 
 void USwipeBox::ReleaseSlateResources(bool bReleaseChildren)
@@ -74,7 +77,7 @@ UClass* USwipeBox::GetSlotClass() const
 void USwipeBox::OnSlotAdded(UPanelSlot* InSlot)
 {
 	// Add the child to the live canvas if it already exists
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		CastChecked<USwipeBoxSlot>(InSlot)->BuildSlot(MySwipeBox.ToSharedRef());
 	}
@@ -83,10 +86,10 @@ void USwipeBox::OnSlotAdded(UPanelSlot* InSlot)
 void USwipeBox::OnSlotRemoved(UPanelSlot* InSlot)
 {
 	// Remove the widget from the live slot if it exists.
-	if ( MySwipeBox.IsValid() && InSlot->Content)
+	if (MySwipeBox.IsValid() && InSlot->Content)
 	{
 		const TSharedPtr<SWidget> Widget = InSlot->Content->GetCachedWidget();
-		if ( Widget.IsValid() )
+		if (Widget.IsValid())
 		{
 			MySwipeBox->RemoveSlot(Widget.ToSharedRef());
 		}
@@ -95,7 +98,7 @@ void USwipeBox::OnSlotRemoved(UPanelSlot* InSlot)
 
 TSharedRef<SWidget> USwipeBox::RebuildWidget()
 {
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+	PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	MySwipeBox = SNew(SSwipeBox)
 		.Style(&WidgetStyle)
 		.SwipeBarStyle(&WidgetBarStyle)
@@ -109,17 +112,20 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 		.FrontPadSwipeing(FrontPadSwipeing)
 		.AnimateWheelSwipeing(bAnimateWheelSwipeing)
 		.WheelSwipeMultiplier(WheelSwipeMultiplier)
+		.Speed(Speed)
+		.Easing(Easing)
+		.BlendExp(BlendExp)
 		.OnUserSwipeed(BIND_UOBJECT_DELEGATE(FOnUserSwipeed, SlateHandleUserSwipeed));
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
-	for ( UPanelSlot* PanelSlot : Slots )
+	PRAGMA_ENABLE_DEPRECATION_WARNINGS
+	for (UPanelSlot* PanelSlot : Slots)
 	{
-		if ( USwipeBoxSlot* TypedSlot = Cast<USwipeBoxSlot>(PanelSlot) )
+		if (USwipeBoxSlot* TypedSlot = Cast<USwipeBoxSlot>(PanelSlot))
 		{
 			TypedSlot->Parent = this;
 			TypedSlot->BuildSlot(MySwipeBox.ToSharedRef());
 		}
 	}
-	
+
 	return MySwipeBox.ToSharedRef();
 }
 
@@ -132,7 +138,7 @@ void USwipeBox::SynchronizeProperties()
 		return;
 	}
 
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+	PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	MySwipeBox->SetSwipeOffset(DesiredSwipeOffset);
 	MySwipeBox->SetOrientation(Orientation);
 	MySwipeBox->SetSwipeBarVisibility(UWidget::ConvertSerializedVisibilityToRuntime(SwipeBarVisibility));
@@ -150,12 +156,12 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	MySwipeBox->InvalidateStyle();
 	MySwipeBox->SetSwipeBarStyle(&WidgetBarStyle);
 	MySwipeBox->InvalidateSwipeBarStyle();
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 }
 
 float USwipeBox::GetSwipeOffset() const
 {
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		return MySwipeBox->GetSwipeOffset();
 	}
@@ -175,7 +181,7 @@ float USwipeBox::GetSwipeOffsetOfEnd() const
 
 float USwipeBox::GetViewFraction() const
 {
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		return MySwipeBox->GetViewFraction();
 	}
@@ -185,7 +191,7 @@ float USwipeBox::GetViewFraction() const
 
 float USwipeBox::GetViewOffsetFraction() const
 {
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		return MySwipeBox->GetViewOffsetFraction();
 	}
@@ -197,7 +203,7 @@ void USwipeBox::SetSwipeOffset(float NewSwipeOffset)
 {
 	DesiredSwipeOffset = NewSwipeOffset;
 
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		MySwipeBox->SetSwipeOffset(NewSwipeOffset);
 	}
@@ -205,7 +211,7 @@ void USwipeBox::SetSwipeOffset(float NewSwipeOffset)
 
 void USwipeBox::SwipeToStart()
 {
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		MySwipeBox->SwipeToStart();
 	}
@@ -213,13 +219,14 @@ void USwipeBox::SwipeToStart()
 
 void USwipeBox::SwipeToEnd()
 {
-	if ( MySwipeBox.IsValid() )
+	if (MySwipeBox.IsValid())
 	{
 		MySwipeBox->SwipeToEnd();
 	}
 }
 
-void USwipeBox::SwipeWidgetIntoView(UWidget* WidgetToFind, bool AnimateSwipe, EDescendantScrollDestination InSwipeDestination, float Padding)
+void USwipeBox::SwipeWidgetIntoView(UWidget* WidgetToFind, bool AnimateSwipe,
+                                    EDescendantScrollDestination InSwipeDestination, float Padding)
 {
 	TSharedPtr<SWidget> SlateWidgetToFind;
 	if (WidgetToFind)
@@ -240,30 +247,32 @@ void USwipeBox::SwipeWidgetIntoView(UWidget* WidgetToFind, bool AnimateSwipe, ED
 void USwipeBox::Serialize(FArchive& Ar)
 {
 	Ar.UsingCustomVersion(FEditorObjectVersion::GUID);
-	
-	const bool bDeprecateThickness = Ar.IsLoading() && Ar.CustomVer(FEditorObjectVersion::GUID) < FEditorObjectVersion::ScrollBarThicknessChange;
+
+	const bool bDeprecateThickness = Ar.IsLoading() && Ar.CustomVer(FEditorObjectVersion::GUID) <
+		FEditorObjectVersion::ScrollBarThicknessChange;
 	if (bDeprecateThickness)
 	{
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+		PRAGMA_DISABLE_DEPRECATION_WARNINGS
 		// Set SwipeBarThickness property to previous default value.
 		SwipeBarThickness.Set(5.0f, 5.0f);
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+		PRAGMA_ENABLE_DEPRECATION_WARNINGS
 	}
 
 	Super::Serialize(Ar);
 
 	if (bDeprecateThickness)
 	{
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
+		PRAGMA_DISABLE_DEPRECATION_WARNINGS
 		// Implicit padding of 2 was removed, so SwipeBarThickness value must be incremented by 4.
 		SwipeBarThickness += FVector2D(4.0f, 4.0f);
-PRAGMA_ENABLE_DEPRECATION_WARNINGS
+		PRAGMA_ENABLE_DEPRECATION_WARNINGS
 	}
 }
 
 #endif // if WITH_EDITORONLY_DATA
 
 PRAGMA_DISABLE_DEPRECATION_WARNINGS
+
 void USwipeBox::SetWidgetStyle(const FSwipeBoxStyle& NewWidgetStyle)
 {
 	WidgetStyle = NewWidgetStyle;
@@ -347,11 +356,17 @@ void USwipeBox::SetSwipeBarVisibility(ESlateVisibility NewSwipeBarVisibility)
 	{
 		switch (SwipeBarVisibility)
 		{
-			case ESlateVisibility::Collapsed:				MySwipeBox->SetSwipeBarVisibility(EVisibility::Collapsed); break;
-			case ESlateVisibility::Hidden:					MySwipeBox->SetSwipeBarVisibility(EVisibility::Hidden); break;
-			case ESlateVisibility::HitTestInvisible:		MySwipeBox->SetSwipeBarVisibility(EVisibility::HitTestInvisible); break;
-			case ESlateVisibility::SelfHitTestInvisible:	MySwipeBox->SetSwipeBarVisibility(EVisibility::SelfHitTestInvisible); break;
-			case ESlateVisibility::Visible:					MySwipeBox->SetSwipeBarVisibility(EVisibility::Visible); break;
+		case ESlateVisibility::Collapsed: MySwipeBox->SetSwipeBarVisibility(EVisibility::Collapsed);
+			break;
+		case ESlateVisibility::Hidden: MySwipeBox->SetSwipeBarVisibility(EVisibility::Hidden);
+			break;
+		case ESlateVisibility::HitTestInvisible: MySwipeBox->SetSwipeBarVisibility(EVisibility::HitTestInvisible);
+			break;
+		case ESlateVisibility::SelfHitTestInvisible: MySwipeBox->SetSwipeBarVisibility(
+				EVisibility::SelfHitTestInvisible);
+			break;
+		case ESlateVisibility::Visible: MySwipeBox->SetSwipeBarVisibility(EVisibility::Visible);
+			break;
 		}
 	}
 }
@@ -455,6 +470,65 @@ bool USwipeBox::IsAnimateWheelSwipeing() const
 	return bAnimateWheelSwipeing;
 }
 
+EEasingFunc::Type USwipeBox::GetEasing() const
+{
+	return Easing;
+}
+
+void USwipeBox::SetEasing(EEasingFunc::Type NewEasing)
+{
+	this->Easing = NewEasing;
+	if (MySwipeBox)
+	{
+		MySwipeBox->SetEasing(NewEasing);
+	}
+}
+
+float USwipeBox::GetBlendExp() const
+{
+	return BlendExp;
+}
+
+void USwipeBox::SetBlendExp(float NewBlendExp)
+{
+	this->BlendExp = NewBlendExp;
+	if (MySwipeBox)
+	{
+		MySwipeBox->SetBlendExp(NewBlendExp);
+	}
+}
+
+float USwipeBox::GetSpeed() const
+{
+	return Speed;
+}
+
+void USwipeBox::SetSpeed(float NewSpeed)
+{
+	this->Speed = NewSpeed;
+	if (MySwipeBox)
+	{
+		MySwipeBox->SetSpeed(NewSpeed);
+	}
+}
+
+int USwipeBox::GetCurrentPage() const
+{
+	if (MySwipeBox)
+	{
+		return MySwipeBox->GetCurrentPage();
+	}
+	return -1;
+}
+
+void USwipeBox::SetCurrentPage(int32 NewCurrentPage)
+{
+	if (MySwipeBox)
+	{
+		MySwipeBox->SetCurrentPage(NewCurrentPage);
+	}
+}
+
 void USwipeBox::SetWheelSwipeMultiplier(float NewWheelSwipeMultiplier)
 {
 	WheelSwipeMultiplier = NewWheelSwipeMultiplier;
@@ -551,6 +625,7 @@ void USwipeBox::InitNavigationSwipePadding(float InNavigationSwipePadding)
 	ensureMsgf(!MySwipeBox.IsValid(), TEXT("The widget is already created."));
 	NavigationSwipePadding = InNavigationSwipePadding;
 }
+
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
 void USwipeBox::SlateHandleUserSwipeed(float CurrentOffset)
@@ -565,36 +640,36 @@ const FText USwipeBox::GetPaletteCategory()
 	return LOCTEXT("Panel", "Panel");
 }
 
-void USwipeBox::OnDescendantSelectedByDesigner( UWidget* DescendantWidget )
+void USwipeBox::OnDescendantSelectedByDesigner(UWidget* DescendantWidget)
 {
-	UWidget* SelectedChild = UWidget::FindChildContainingDescendant( this, DescendantWidget );
-	if ( SelectedChild )
+	UWidget* SelectedChild = UWidget::FindChildContainingDescendant(this, DescendantWidget);
+	if (SelectedChild)
 	{
-		SwipeWidgetIntoView( SelectedChild, true );
+		SwipeWidgetIntoView(SelectedChild, true);
 
-		if ( TickHandle.IsValid() )
+		if (TickHandle.IsValid())
 		{
-			FTSTicker::GetCoreTicker().RemoveTicker( TickHandle );
+			FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
 			TickHandle.Reset();
 		}
 	}
 }
 
-void USwipeBox::OnDescendantDeselectedByDesigner( UWidget* DescendantWidget )
+void USwipeBox::OnDescendantDeselectedByDesigner(UWidget* DescendantWidget)
 {
-	if ( TickHandle.IsValid() )
+	if (TickHandle.IsValid())
 	{
-		FTSTicker::GetCoreTicker().RemoveTicker( TickHandle );
+		FTSTicker::GetCoreTicker().RemoveTicker(TickHandle);
 		TickHandle.Reset();
 	}
 
 	// because we get a deselect before we get a select, we need to delay this call until we're sure we didn't Swipe to another widget.
-	TickHandle = FTSTicker::GetCoreTicker().AddTicker( FTickerDelegate::CreateLambda( [this]( float ) -> bool
-	                                                                                {
-                                                                                        QUICK_SCOPE_CYCLE_COUNTER(STAT_USwipeBox_SwipeToStart_LambdaTick);
-		                                                                                this->SwipeToStart();
-		                                                                                return false;
-		                                                                            } ) );
+	TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([this](float) -> bool
+	{
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_USwipeBox_SwipeToStart_LambdaTick);
+		this->SwipeToStart();
+		return false;
+	}));
 }
 
 #endif
@@ -602,4 +677,3 @@ void USwipeBox::OnDescendantDeselectedByDesigner( UWidget* DescendantWidget )
 /////////////////////////////////////////////////////
 
 #undef LOCTEXT_NAMESPACE
-
