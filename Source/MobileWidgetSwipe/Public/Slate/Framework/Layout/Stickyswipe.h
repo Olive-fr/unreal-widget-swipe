@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "HAL/Platform.h"
 #include "Widgets/SPanel.h"
 #include "Layout/Geometry.h"
@@ -65,13 +66,62 @@ private:
 
 	float GetPageSwipeValue(const FGeometry& AllottedGeometry, const int PageId);
 	/** How much we've over-scrolled above/below the beginning/end of the list, stored in log form */
+
+public:
+	EEasingFunc::Type GetEasing() const
+	{
+		return Easing;
+	}
+
+	void SetEasing(EEasingFunc::Type NewEasing)
+	{
+		this->Easing = NewEasing;
+	}
+
+	float GetBlendExp() const
+	{
+		return BlendExp;
+	}
+
+	void SetBlendExp(float NewBlendExp)
+	{
+		this->BlendExp = NewBlendExp;
+	}
+
+	float GetSpeed() const
+	{
+		return Speed;
+	}
+
+	void SetSpeed(float NewSpeed)
+	{
+		this->Speed = NewSpeed;
+	}
+
+	int GetCurrentPage() const
+	{
+		return CurrentPageId;
+	}
+
+	void SetCurrentPage(int NewPage)
+	{
+		this->CurrentPageId = NewPage;
+	}
+
+private:
+	EEasingFunc::Type Easing;
+	float BlendExp;
+	float Speed;
+	int CurrentPageId;
+
+	
 	float StickyswipeAmount;
+	float StickyswipeAmountStart;
+	float AlphaTarget;
 	float SwipeAmountSinceUserMove;
 
 	float TargetPoint;
 	float MaxValue;
-	int CurrentPageId;
-
 	EStickyMode CurrentMode = EStickyMode::StickyToOrigin;
 
 	bool UserSwipeEnd = false;
