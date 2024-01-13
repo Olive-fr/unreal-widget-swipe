@@ -68,5 +68,26 @@ public class MobileWidgetSwipe : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+		
+		// Add slate runtime dependencies
+		if (Target.bUsesSlate)
+		{
+			RuntimeDependencies.Add("$(EngineDir)/Content/Slate/...*.ttf", StagedFileType.UFS);
+			RuntimeDependencies.Add("$(EngineDir)/Content/Slate/...*.png", StagedFileType.UFS);
+			RuntimeDependencies.Add("$(EngineDir)/Content/Slate/...*.svg", StagedFileType.UFS);
+			RuntimeDependencies.Add("$(EngineDir)/Content/Slate/...*.tps", StagedFileType.UFS);
+			RuntimeDependencies.Add("$(EngineDir)/Content/SlateDebug/...", StagedFileType.DebugNonUFS);
+
+			if (Target.Platform == UnrealTargetPlatform.Win64)
+			{ 
+				RuntimeDependencies.Add("$(EngineDir)/Content/Slate/...*.cur", StagedFileType.NonUFS);
+			}
+
+			if (Target.ProjectFile != null)
+			{
+				RuntimeDependencies.Add("$(ProjectDir)/Content/Slate/...", StagedFileType.UFS);
+				RuntimeDependencies.Add("$(ProjectDir)/Content/SlateDebug/...", StagedFileType.DebugNonUFS);
+			}
+		}
 	}
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WidgetSwipeStyle.h"
 #include "Misc/Attribute.h"
 #include "Styling/SlateColor.h"
 #include "Input/Reply.h"
@@ -20,7 +21,7 @@ class SImage;
 
 DECLARE_DELEGATE_OneParam(
 	FOnUserSwipeed,
-	float );	/** SwipeOffset as a fraction between 0 and 1 */
+	int32 );	/** SwipeOffset as a fraction between 0 and 1 */
 
 
 class SSwipeBarTrack;

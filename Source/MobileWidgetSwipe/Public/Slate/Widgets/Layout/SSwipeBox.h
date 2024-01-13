@@ -247,6 +247,9 @@ public:
 		SLATE_ARGUMENT(float, BlendExp);
 		SLATE_ARGUMENT(float, Speed);
 		SLATE_ARGUMENT(int, CurrentPageId);
+	
+		SLATE_ARGUMENT(float, Looseness);
+		SLATE_ARGUMENT(float, ScreenPercentValidation);
 
 		SLATE_ARGUMENT(EDescendantScrollDestination, NavigationDestination);
 
@@ -309,6 +312,19 @@ public:
 	int GetCurrentPage() const;
 
 	void SetCurrentPage(int NewPage);
+	
+	/**
+	* @param PlayAnimation true to play animation while changing page, false to instantly change page.
+	*/
+	void SetCurrentPage(int NewPage, bool ThrowEvent, bool PlayAnimation);
+	
+	float GetLooseness() const;
+	
+	void SetLooseness(float NewLooseness);
+	
+	float GetScreenPercentValidation() const;
+	
+	void SetScreenPercentValidation(float NewScreenPercentValidation);
 
 	void SetAnimateWheelSwipeing(bool bInAnimateWheelSwipeing);
 
@@ -444,7 +460,7 @@ private:
 	             bool InAnimateSwipe, bool InActionFromUser = false);
 
 	/** Invoked when the user Swipe via the Swipebar */
-	void SwipeBar_OnUserSwipeed(float InSwipeOffsetFraction);
+	void SwipeBar_OnUserSwipeed(int32 InPage);
 
 	/** Does the user need a hint that they can Swipe to the start of the list? */
 	FSlateColor GetStartShadowOpacity() const;

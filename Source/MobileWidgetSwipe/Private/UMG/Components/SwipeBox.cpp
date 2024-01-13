@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "UMG/Components/SwipeBox.h"
+
+#include "WidgetSwipeStyle.h"
 #include "Containers/Ticker.h"
 #include "Slate/Styling/DefaultStyleCacheExtension.h"
 #include "UMG/Components/SwipeBoxSlot.h"
@@ -20,28 +22,34 @@ USwipeBox::USwipeBox(const FObjectInitializer& ObjectInitializer)
 	  , Orientation(Orient_Vertical)
 	  , SwipeBarVisibility(ESlateVisibility::Visible)
 	  , ConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible)
-	  , SwipeBarThickness(9.0f, 9.0f)
-	  , SwipeBarPadding(2.0f)
+	  , SwipeBarThickness(0, 0)
+	  , SwipeBarPadding(0)
 	  , AlwaysShowSwipeBar(false)
 	  , AlwaysShowSwipeBarTrack(false)
-	  , AllowOverSwipe(true)
+	  , AllowOverSwipe(false)
 	  , AllowStickySwipe(true)
 	  , BackPadSwipeing(false)
 	  , FrontPadSwipeing(false)
 	  , NavigationDestination(EDescendantScrollDestination::IntoView)
 	  , NavigationSwipePadding(0.0f)
 	  , SwipeWhenFocusChanges(EScrollWhenFocusChanges::NoScroll)
-      , Easing(EEasingFunc::Linear)
+      , Easing(EEasingFunc::ExpoOut)
       , BlendExp(2.0)
-      , Speed(1.0)
+      , Speed(2.0)
+      , Looseness(300)
+      , ScreenPercentValidation(0.15)
+	  , SlotFillChildAsParentSize(true)
 {
 	bIsVariable = false;
 
 	SetVisibilityInternal(ESlateVisibility::Visible);
 	SetClipping(EWidgetClipping::ClipToBounds);
-
 	PRAGMA_DISABLE_DEPRECATION_WARNINGS
-	WidgetStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetRuntime().GetSwipeBoxStyle();
+	if (FWidgetSwipeStyle::Get())
+	{
+		WidgetStyle = FWidgetSwipeStyle::Get()->GetWidgetStyle<FSwipeBoxStyle>("SwipeBox");
+	}
+	// WidgetStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetRuntime().GetSwipeBoxStyle();
 	WidgetBarStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetRuntime().GetSwipeBarStyle();
 	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -49,7 +57,11 @@ USwipeBox::USwipeBox(const FObjectInitializer& ObjectInitializer)
 	if (IsEditorWidget())
 	{
 		PRAGMA_DISABLE_DEPRECATION_WARNINGS
-		WidgetStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetEditor().GetSwipeBoxStyle();
+		if (FWidgetSwipeStyle::Get())
+		{
+			WidgetStyle = FWidgetSwipeStyle::Get()->GetWidgetStyle<FSwipeBoxStyle>("SwipeBox");
+		}
+		// WidgetStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetEditor().GetSwipeBoxStyle();
 		WidgetBarStyle = UE::Slate::Private::FDefaultStyleCacheExtension::GetEditor().GetSwipeBarStyle();
 		PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -115,6 +127,8 @@ TSharedRef<SWidget> USwipeBox::RebuildWidget()
 		.Speed(Speed)
 		.Easing(Easing)
 		.BlendExp(BlendExp)
+		.Looseness(Looseness)
+		.ScreenPercentValidation(ScreenPercentValidation)
 		.OnUserSwipeed(BIND_UOBJECT_DELEGATE(FOnUserSwipeed, SlateHandleUserSwipeed));
 	PRAGMA_ENABLE_DEPRECATION_WARNINGS
 	for (UPanelSlot* PanelSlot : Slots)
@@ -512,6 +526,35 @@ void USwipeBox::SetSpeed(float NewSpeed)
 	}
 }
 
+float USwipeBox::GetLooseness() const
+{
+	return Looseness;
+}
+
+void USwipeBox::SetLooseness(float NewLooseness)
+{
+	this->Looseness = NewLooseness;
+	if (MySwipeBox)
+	{
+		MySwipeBox->SetLooseness(NewLooseness);
+	}
+}
+
+float USwipeBox::GetScreenPercentValidation() const
+{
+	return ScreenPercentValidation;
+}
+
+void USwipeBox::SetScreenPercentValidation(float NewScreenPercentValidation)
+{
+	this->ScreenPercentValidation = NewScreenPercentValidation;
+	
+	if (MySwipeBox)
+	{
+		MySwipeBox->SetScreenPercentValidation(NewScreenPercentValidation);
+	}
+}
+
 int USwipeBox::GetCurrentPage() const
 {
 	if (MySwipeBox)
@@ -521,11 +564,11 @@ int USwipeBox::GetCurrentPage() const
 	return -1;
 }
 
-void USwipeBox::SetCurrentPage(int32 NewCurrentPage)
+void USwipeBox::SetCurrentPage(int32 NewCurrentPage, bool ThrowEvent, bool PlayAnimation)
 {
 	if (MySwipeBox)
 	{
-		MySwipeBox->SetCurrentPage(NewCurrentPage);
+		MySwipeBox->SetCurrentPage(NewCurrentPage, ThrowEvent, PlayAnimation);
 	}
 }
 
@@ -628,9 +671,9 @@ void USwipeBox::InitNavigationSwipePadding(float InNavigationSwipePadding)
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-void USwipeBox::SlateHandleUserSwipeed(float CurrentOffset)
+void USwipeBox::SlateHandleUserSwipeed(int32 CurrentPage)
 {
-	OnUserSwipeed.Broadcast(CurrentOffset);
+	OnUserSwipeed.Broadcast(CurrentPage);
 }
 
 #if WITH_EDITOR

@@ -12,7 +12,7 @@
 #include "Containers/Ticker.h"
 #include "SwipeBox.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUserSwipeedEvent, float, CurrentOffset);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUserSwipeedEvent, int32, CurrentPage);
 
 /**
  * An arbitrary Swipeable collection of widgets.  Great for presenting 10-100 widgets in a list.  Doesn't support virtualization.
@@ -100,20 +100,30 @@ public:
 	bool bAnimateWheelSwipeing = false;
 
 	UE_DEPRECATED(5.2, "Direct access to Easing is deprecated. Please use the getter or setter.")
-	/** True to lerp smoothly when wheel Swipeing along the Swipe box */
+	/** Swipe animation interpolation method */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetEasing", Setter = "SetEasing", Category = "Swipe|Page Transition")
 	TEnumAsByte<EEasingFunc::Type> Easing;
 	
 	UE_DEPRECATED(5.2, "Direct access to BlendExp is deprecated. Please use the getter or setter.")
-	/** True to lerp smoothly when wheel Swipeing along the Swipe box */
+	/** Set the exponent value of the interpolation function for the swipe animation */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetBlendExp", Setter = "SetBlendExp", Category = "Swipe|Page Transition")
 	float BlendExp;
 	
 	UE_DEPRECATED(5.2, "Direct access to Speed is deprecated. Please use the getter or setter.")
-	/** True to lerp smoothly when wheel Swipeing along the Swipe box */
+	/** Set the speed coefficient of the swipe animation */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetSpeed", Setter = "SetSpeed", Category = "Swipe|Page Transition")
 	float Speed;
 
+	UE_DEPRECATED(5.2, "Direct access to Looseness is deprecated. Please use the getter or setter.")
+	/** When the user try to swipe, the page preview come to the border. This coefficient set the looseness factor of that preview from the real user travel distance. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetLooseness", Setter = "SetLooseness", Category = "Swipe|Page Transition")
+	float Looseness;
+
+	UE_DEPRECATED(5.2, "Direct access to ScreenPercentValidation is deprecated. Please use the getter or setter.")
+	/** Minimum percent of the screen the user must travel to validate a swipe */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter = "GetScreenPercentValidation", Setter = "SetScreenPercentValidation", Category = "Swipe|Page Transition")
+	float ScreenPercentValidation;
+	
 	UE_DEPRECATED(5.2, "Direct access to NavigationDestination is deprecated. Please use the getter or setter.")
 	/** Sets where to Swipe a widget to when using explicit navigation or if SwipeWhenFocusChanges is enabled */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Getter, Setter, BlueprintSetter = "SetNavigationDestination", Getter, Setter, Category = "Swipe")
@@ -215,10 +225,26 @@ public:
 	void SetSpeed(float NewSpeed);
 
 	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
-	int GetCurrentPage() const;
+	float GetLooseness() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetLooseness(float NewLooseness);
+	
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	float GetScreenPercentValidation() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetScreenPercentValidation(float NewScreenPercentValidation);
 
 	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
-	void SetCurrentPage(int32 NewCurrentPage);
+	int GetCurrentPage() const;
+
+	/**
+	 * @param ThrowEvent true to send the change event
+	 * @param PlayAnimation true to play animation while changing page, false to instantly change page.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Swipe|Page Transition")
+	void SetCurrentPage(int32 NewCurrentPage, bool ThrowEvent, bool PlayAnimation);
 
 	UFUNCTION(BlueprintCallable, Category = "Swipe")
 	void SetWheelSwipeMultiplier(float NewWheelSwipeMultiplier);
@@ -327,7 +353,7 @@ protected:
 	virtual void OnSlotRemoved(UPanelSlot* Slot) override;
 	// End UPanelWidget
 
-	void SlateHandleUserSwipeed(float CurrentOffset);
+	void SlateHandleUserSwipeed(int32 CurrentPage);
 
 	// Initialize IsFocusable in the constructor before the SWidget is constructed.
 	void InitBackPadSwipeing(bool InBackPadSwipeing);

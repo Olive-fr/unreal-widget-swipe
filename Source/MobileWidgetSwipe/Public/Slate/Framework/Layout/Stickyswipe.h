@@ -28,9 +28,6 @@ struct MOBILEWIDGETSWIPE_API FStickyswipe
 {
 public:
 
-	static float PageWidth;
-	/** The amount to scale the logarithm by to make it more loose */
-	static float Looseness;
 	/** The "max" used to perform the interpolation snap back, and make it faster the further away it is. */
 	static float OvershootLooseMax;
 	/** The bounce back rate when the overscroll stops. */
@@ -45,7 +42,7 @@ public:
 	float GetStickyswipe(const FGeometry& AllottedGeometry) const;
 
 	/** Ticks the stickyscroll manager so it can animate. */
-	void UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeometry& AllottedGeometry, float InDeltaTime);
+	bool UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeometry& AllottedGeometry, float InDeltaTime);
 
 	void OnUserReleaseInterraction();
 
@@ -62,12 +59,7 @@ public:
 	
 	/** Resets the stickyscroll amout. */
 	void ResetStickyswipe();
-private:
 
-	float GetPageSwipeValue(const FGeometry& AllottedGeometry, const int PageId);
-	/** How much we've over-scrolled above/below the beginning/end of the list, stored in log form */
-
-public:
 	EEasingFunc::Type GetEasing() const
 	{
 		return Easing;
@@ -103,17 +95,40 @@ public:
 		return CurrentPageId;
 	}
 
-	void SetCurrentPage(int NewPage)
+	void SetCurrentPage(int NewPage, bool ThrowEvent, bool PlayAnimation);
+	
+	EOrientation GetOrientation() const
 	{
-		this->CurrentPageId = NewPage;
+		return Orientation;
 	}
 
+	void SetOrientation(EOrientation NewOrientation)
+	{
+		this->Orientation = NewOrientation;
+	}
+	
+	float GetDistanceFromEnd() const;
+
+	float GetScreenPercentDistanceUserChangePage() const;
+	void SetScreenPercentDistanceUserChangePage(float InScreenPercentDistanceUserChangePage);
+	float GetLooseness() const;
+	void SetLooseness(float InLooseness);
+
 private:
+	float GetPageSwipeValue(const FGeometry* AllottedGeometry, const int PageId) const;
+	/** How much we've over-scrolled above/below the beginning/end of the list, stored in log form */
+	
 	EEasingFunc::Type Easing;
 	float BlendExp;
 	float Speed;
 	int CurrentPageId;
+	float ScreenPercentDistanceUserChangePage;
+	/** The amount to scale the logarithm by to make it more loose */
+	float Looseness;
+	EOrientation Orientation;
 
+	const FGeometry* LastAllottedGeometry;
+	int32 LastChildId = -1;
 	
 	float StickyswipeAmount;
 	float StickyswipeAmountStart;
@@ -126,5 +141,8 @@ private:
 
 	bool UserSwipeEnd = false;
 	bool UserSwiped = false;
+	bool FunctionSwiped = false;
+	bool FunctionSwipedWithAnimation = false;
+	bool FunctionSwipedThrowEvent = false;
 	bool StickyToOriginInProgress = false;
 };

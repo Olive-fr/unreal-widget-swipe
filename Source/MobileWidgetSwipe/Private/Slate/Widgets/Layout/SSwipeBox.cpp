@@ -189,6 +189,9 @@ void SSwipeBox::Construct(const FArguments& InArgs)
 	StickySwipe.SetBlendExp(InArgs._BlendExp);
 	StickySwipe.SetEasing(InArgs._Easing);
 	StickySwipe.SetSpeed(InArgs._Speed);
+	StickySwipe.SetOrientation(InArgs._Orientation);
+	StickySwipe.SetLooseness(InArgs._Looseness);
+	StickySwipe.SetScreenPercentDistanceUserChangePage(InArgs._ScreenPercentValidation);
 
 
 	if (InArgs._ExternalSwipebar.IsValid())
@@ -587,7 +590,9 @@ void SSwipeBox::SetOrientation(EOrientation InOrientation)
 {
 	if (Orientation != InOrientation)
 	{
+		
 		Orientation = InOrientation;
+		StickySwipe.SetOrientation(InOrientation);
 		if (!bSwipeBarIsExternal)
 		{
 			SwipeBar = ConstructSwipeBar();
@@ -745,7 +750,11 @@ void SSwipeBox::Tick(const FGeometry& AllottedGeometry, const double InCurrentTi
 	if (AllowStickySwipe == EAllowStickyswipe::Yes)
 	{
 		NewPhysicalOffset += StickySwipe.GetStickyswipe(AllottedGeometry);
-		StickySwipe.UpdateStickyswipe(SwipePanel.ToSharedRef(), CachedGeometry, InDeltaTime);
+		bool Changepage = StickySwipe.UpdateStickyswipe(SwipePanel.ToSharedRef(), CachedGeometry, InDeltaTime);
+		if (Changepage)
+		{
+			OnUserSwipeed.ExecuteIfBound(StickySwipe.GetCurrentPage());
+		}
 	}
 
 	const bool bWasSwipeing = bIsSwipeing;
@@ -1040,8 +1049,6 @@ bool SSwipeBox::SwipeBy(const FGeometry& AllottedGeometry, float LocalSwipeAmoun
 			ShouldApplyOverscroll(DesiredSwipeOffset == 0, DesiredSwipeOffset == SwipeMax, LocalSwipeAmount))
 		{
 			float result = OverSwipe.ScrollBy(AllottedGeometry, LocalSwipeAmount);
-			UE_LOG(LogTemp, Warning, TEXT("OverSwipe amount: %f, AnimateSwipe: %s"), result,
-			       InAnimateSwipe?TEXT("true"):TEXT("false"))
 		}
 		else
 		{
@@ -1058,8 +1065,6 @@ bool SSwipeBox::SwipeBy(const FGeometry& AllottedGeometry, float LocalSwipeAmoun
 			}
 		}
 	}
-
-	OnUserSwipeed.ExecuteIfBound(DesiredSwipeOffset);
 
 	return ConsumeMouseWheel == EConsumeMouseWheel::Always || DesiredSwipeOffset != PreviousSwipeOffset;
 }
@@ -1262,22 +1267,17 @@ int32 SSwipeBox::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeomet
 	return NewLayerId;
 }
 
-void SSwipeBox::SwipeBar_OnUserSwipeed(float InSwipeOffsetFraction)
+void SSwipeBox::SwipeBar_OnUserSwipeed(int32 InPage)
 {
 	bAnimateSwipe = false;
+	StickySwipe.SetCurrentPage(InPage, true, true);
 
-	const float ContentSize = GetSwipeComponentFromVector(SwipePanel->GetDesiredSize());
-	const FGeometry SwipePanelGeometry = FindChildGeometry(CachedGeometry, SwipePanel.ToSharedRef());
-
-	// Clamp to max Swipe offset
-	DesiredSwipeOffset = FMath::Min(InSwipeOffsetFraction * ContentSize,
-	                                ContentSize - GetSwipeComponentFromVector(SwipePanelGeometry.GetLocalSize()));
-	OnUserSwipeed.ExecuteIfBound(DesiredSwipeOffset);
+	OnUserSwipeed.ExecuteIfBound(InPage);
 
 	Invalidate(EInvalidateWidget::Layout);
 }
 
-const float ShadowFadeDistance = 32.0f;
+const float ShadowFadeDistance = 320.0f;
 
 FSlateColor SSwipeBox::GetStartShadowOpacity() const
 {
@@ -1290,9 +1290,10 @@ FSlateColor SSwipeBox::GetStartShadowOpacity() const
 FSlateColor SSwipeBox::GetEndShadowOpacity() const
 {
 	// The shadow should only be visible when the user needs a hint that they can Swipe down.
-	const float ShadowOpacity = (SwipeBar->DistanceFromBottom() * GetSwipeComponentFromVector(
-		SwipePanel->GetDesiredSize()) / ShadowFadeDistance);
-
+	// const float ShadowOpacity = (SwipeBar->DistanceFromBottom() * GetSwipeComponentFromVector(
+	// 	SwipePanel->GetDesiredSize()) / ShadowFadeDistance);
+	// StickySwipe.
+	const float ShadowOpacity = StickySwipe.GetDistanceFromEnd() / ShadowFadeDistance;
 	return FLinearColor(1.0f, 1.0f, 1.0f, ShadowOpacity);
 }
 
@@ -1373,7 +1374,32 @@ int SSwipeBox::GetCurrentPage() const
 
 void SSwipeBox::SetCurrentPage(int NewPage)
 {
-	StickySwipe.SetCurrentPage(NewPage);
+	StickySwipe.SetCurrentPage(NewPage, true, true);
+}
+
+void SSwipeBox::SetCurrentPage(int NewPage, bool ThrowEvent, bool PlayAnimation)
+{
+	StickySwipe.SetCurrentPage(NewPage, ThrowEvent, PlayAnimation);
+}
+
+float SSwipeBox::GetLooseness() const
+{
+	return StickySwipe.GetLooseness();
+}
+
+void SSwipeBox::SetLooseness(float NewLooseness)
+{
+	StickySwipe.SetLooseness(NewLooseness);
+}
+
+float SSwipeBox::GetScreenPercentValidation() const
+{
+	return StickySwipe.GetScreenPercentDistanceUserChangePage();
+}
+
+void SSwipeBox::SetScreenPercentValidation(float NewScreenPercentValidation)
+{
+	StickySwipe.SetScreenPercentDistanceUserChangePage(NewScreenPercentValidation);
 }
 
 void SSwipeBox::SetAnimateWheelSwipeing(bool bInAnimateWheelSwipeing)

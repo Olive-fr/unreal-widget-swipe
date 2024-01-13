@@ -4,17 +4,17 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
-float FStickyswipe::PageWidth(500.0f);
-float FStickyswipe::Looseness(50.0f);
 float FStickyswipe::OvershootLooseMax(100.0f);
 float FStickyswipe::OvershootBounceRate(1500.0f);
 
 FStickyswipe::FStickyswipe()
-	: StickyswipeAmount(0.0f)
+	: Easing(EEasingFunc::CircularInOut)
 	  , CurrentPageId(0)
-, Easing(EEasingFunc::CircularInOut)
-, BlendExp(2.0)
-, Speed(1.0)
+      , StickyswipeAmount(0.0f)
+	  , BlendExp(2.0)
+	  , Speed(1.0)
+	  , ScreenPercentDistanceUserChangePage(0.15)
+	  , Looseness(200)
 {
 }
 
@@ -26,14 +26,14 @@ float FStickyswipe::SwipeBy(const FGeometry& AllottedGeometry, float LocalDeltaS
 
 	const float ValueBeforeDeltaApplied = StickyswipeAmount;
 	StickyswipeAmount += ScreenDeltaSwipe;
-	
+
 	SwipeAmountSinceUserMove += LocalDeltaScroll;
 
 	if (InActionFromUser)
 	{
 		StickyToOriginInProgress = false;
 		CurrentMode = EStickyMode::StickyToOrigin;
-		TargetPoint = GetPageSwipeValue(AllottedGeometry, CurrentPageId);
+		TargetPoint = GetPageSwipeValue(&AllottedGeometry, CurrentPageId);
 	}
 
 	return ValueBeforeDeltaApplied - StickyswipeAmount;
@@ -70,49 +70,84 @@ float FStickyswipe::GetStickyswipe(const FGeometry& AllottedGeometry) const
 		}
 		break;
 	default:
-			EffectiveSwipe = 0;
+		EffectiveSwipe = 0;
 		break;
 	}
-	
+
 	EffectiveSwipe = FMath::Clamp(EffectiveSwipe, 0, MaxValue);
 	return EffectiveSwipe;
 }
 
 // Code used in tick after the GetStickyswipe to update values if an animation is present
-void FStickyswipe::UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeometry& AllottedGeometry,
+bool FStickyswipe::UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeometry& AllottedGeometry,
                                      float InDeltaTime)
 {
+	bool SwipeValidated = false;
 	const auto Children = Panel->GetChildren();
-	
+	LastAllottedGeometry = &AllottedGeometry;
+
 	if (Children->Num() < 1)
 	{
-		return ;
+		return false;
 	}
-	TSharedRef<SWidget> Widget = Children->GetChildAt(CurrentPageId);
 
-	if (UserSwipeEnd)
+	LastChildId = Children->Num() - 1;
+
+	if (UserSwipeEnd || FunctionSwiped)
 	{
-		const int ChildrenNb = Panel->GetChildren()->Num();
-		float SizeX = AllottedGeometry.GetLocalSize().X; // FIXME it's not only horizontal
+		float Size;
+		switch (Orientation)
+		{
+		case Orient_Horizontal: Size = AllottedGeometry.GetLocalSize().X;
+			break;
+		case Orient_Vertical: Size = AllottedGeometry.GetLocalSize().Y;
+			break;
+		default: Size = 0;
+		}
+
 		// If the user released the interraction, compute the page swipe logic
-		if (FMath::Abs(SwipeAmountSinceUserMove) > SizeX * 0.15) // FIXME 0.15 to the percentage 
+		if (FunctionSwiped)
+		{
+			TSharedRef<SWidget> Widget = Children->GetChildAt(CurrentPageId);
+			if (FunctionSwipedWithAnimation)
+			{
+				CurrentMode = EStickyMode::StickyToTarget;
+				float NewStickyswipeAmount = GetStickyswipe(AllottedGeometry);
+				TargetPoint = GetPageSwipeValue(&AllottedGeometry, CurrentPageId);
+
+				StickyswipeAmount = NewStickyswipeAmount;
+				StickyswipeAmountStart = StickyswipeAmount;
+				AlphaTarget = 0;
+			}
+			else
+			{
+				CurrentMode = EStickyMode::StickyToOrigin;
+				TargetPoint = GetPageSwipeValue(&AllottedGeometry, CurrentPageId);
+				StickyswipeAmount = TargetPoint;
+			}
+			if (FunctionSwipedThrowEvent)
+			{
+				SwipeValidated = true;
+			}
+		} else if (FMath::Abs(SwipeAmountSinceUserMove) > Size * ScreenPercentDistanceUserChangePage)
 		{
 			float NewStickyswipeAmount = GetStickyswipe(AllottedGeometry);
 			CurrentMode = EStickyMode::StickyToTarget;
-			// The user traveled 15% of the geometry, the movement is validated
-			int NewCurrentPageId = SwipeAmountSinceUserMove > 0 ? CurrentPageId + 1 : CurrentPageId - 1;
-			NewCurrentPageId = FMath::Clamp(NewCurrentPageId, 0, ChildrenNb - 1); //FIXME 10 to the max page
 
+			int NewCurrentPageId = SwipeAmountSinceUserMove > 0 ? CurrentPageId + 1 : CurrentPageId - 1;
+			NewCurrentPageId = FMath::Clamp(NewCurrentPageId, 0, LastChildId);
 			CurrentPageId = NewCurrentPageId;
-			Widget = Children->GetChildAt(CurrentPageId);
+			
+			TSharedRef<SWidget> Widget = Children->GetChildAt(CurrentPageId);
 			StickyswipeAmount = NewStickyswipeAmount;
 			StickyswipeAmountStart = StickyswipeAmount;
 			AlphaTarget = 0;
-			// TargetPoint = StickyswipeAmount + Widget->GetCachedGeometry().Position.X / AllottedGeometry.Scale;
-			TargetPoint = GetPageSwipeValue(AllottedGeometry, CurrentPageId);
+
+			TargetPoint = GetPageSwipeValue(&AllottedGeometry, CurrentPageId);
+			SwipeValidated = true;
 		}
 	}
-	
+
 
 	switch (CurrentMode)
 	{
@@ -147,17 +182,9 @@ void FStickyswipe::UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeom
 		}
 	case EStickyMode::StickyToTarget:
 		{
-			//TargetPoint = StickyswipeAmount + Widget->GetCachedGeometry().Position.X / AllottedGeometry.Scale;
-			
-			// TargetPoint = GetPageSwipeValue(AllottedGeometry, CurrentPageId);
-			// StickyswipeAmount = FMath::FInterpTo(StickyswipeAmount, TargetPoint, InDeltaTime, 3.0);
-			// if (FMath::IsNearlyEqual(StickyswipeAmount, TargetPoint, 0.01))
-			// {
-			// 	CurrentMode = EStickyMode::StickyToOrigin;
-			// }
-			//TargetPoint = GetPageSwipeValue(AllottedGeometry, CurrentPageId);
 			AlphaTarget += InDeltaTime * Speed;
-			StickyswipeAmount = UKismetMathLibrary::Ease(StickyswipeAmountStart, TargetPoint, AlphaTarget, Easing, BlendExp);
+			StickyswipeAmount = UKismetMathLibrary::Ease(StickyswipeAmountStart, TargetPoint, AlphaTarget, Easing,
+			                                             BlendExp);
 			if (AlphaTarget >= 1.0)
 			{
 				CurrentMode = EStickyMode::StickyToOrigin;
@@ -165,8 +192,8 @@ void FStickyswipe::UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeom
 			break;
 		}
 	}
-	
-	MaxValue = GetPageSwipeValue(AllottedGeometry, Children->Num() - 1);
+
+	MaxValue = GetPageSwipeValue(&AllottedGeometry, LastChildId);
 	StickyswipeAmount = FMath::Clamp(StickyswipeAmount, 0, MaxValue);
 
 
@@ -175,7 +202,12 @@ void FStickyswipe::UpdateStickyswipe(const TSharedRef<SPanel> Panel, const FGeom
 		UserSwipeEnd = false;
 		SwipeAmountSinceUserMove = 0;
 	}
+	FunctionSwiped = false;
+	FunctionSwipedWithAnimation = false;
+	FunctionSwipedThrowEvent = false;
 	UserSwiped = false;
+
+	return SwipeValidated;
 }
 
 void FStickyswipe::OnUserReleaseInterraction()
@@ -193,7 +225,49 @@ void FStickyswipe::ResetStickyswipe()
 	StickyswipeAmount = 0.0f;
 }
 
-float FStickyswipe::GetPageSwipeValue(const FGeometry& AllottedGeometry, int PageId)
+float FStickyswipe::GetPageSwipeValue(const FGeometry* AllottedGeometry, int PageId) const
 {
-	return AllottedGeometry.Size.X * PageId - PageId;
+	switch (Orientation)
+	{
+	case Orient_Horizontal: return AllottedGeometry->Size.X * PageId - PageId;
+	case Orient_Vertical: return AllottedGeometry->Size.Y * PageId - PageId;
+	default: return 0;
+	}
+}
+
+void FStickyswipe::SetCurrentPage(int NewPage, bool ThrowEvent, bool PlayAnimation)
+{
+	this->CurrentPageId = NewPage;
+	FunctionSwiped = true;
+	FunctionSwipedWithAnimation = PlayAnimation;
+	FunctionSwipedThrowEvent = ThrowEvent;
+}
+
+float FStickyswipe::GetDistanceFromEnd() const
+{
+	if (LastAllottedGeometry && LastChildId > -1)
+	{
+		return GetPageSwipeValue(LastAllottedGeometry, LastChildId) - StickyswipeAmount;
+	}
+	return 1000000000;
+}
+
+float FStickyswipe::GetScreenPercentDistanceUserChangePage() const
+{
+	return ScreenPercentDistanceUserChangePage;
+}
+
+void FStickyswipe::SetScreenPercentDistanceUserChangePage(float InScreenPercentDistanceUserChangePage)
+{
+	this->ScreenPercentDistanceUserChangePage = InScreenPercentDistanceUserChangePage;
+}
+
+float FStickyswipe::GetLooseness() const
+{
+	return Looseness;
+}
+
+void FStickyswipe::SetLooseness(float InLooseness)
+{
+	this->Looseness = InLooseness;
 }

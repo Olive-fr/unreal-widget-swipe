@@ -18,15 +18,17 @@ public:
 	static MOBILEWIDGETSWIPE_API void ReloadTextures();
 
 	/** @return The Slate style set for the UMG Style */
-	static MOBILEWIDGETSWIPE_API const ISlateStyle& Get();
+	static MOBILEWIDGETSWIPE_API const TSharedPtr<ISlateStyle> Get();
 
 	static MOBILEWIDGETSWIPE_API FName GetStyleSetName();
 
 private:
 
-	static TSharedRef< class FSlateStyleSet > Create();
+	static TSharedRef< class FSlateStyleSet > CreateIconsStyle();
+	static TSharedRef< class FSlateStyleSet > CreateSlateStyle();
 
 private:
 
-	static TSharedPtr< class FSlateStyleSet > WidgetSwipeStyleInstance;
+	static TSharedPtr< class FSlateStyleSet > WidgetSwipeStyleIconsInstance;
+	static TSharedPtr< class FSlateStyleSet > WidgetSwipeStyleSlateInstance;
 };
