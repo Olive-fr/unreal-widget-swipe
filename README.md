@@ -1,22 +1,23 @@
 ﻿# Why
-The goal with this really small library is to allow you to create swipe feature with a widget, like in your photo app. I create it because it's a common feature on Mobile devices.
+The goal with this really small library is to allow you to create swipe feature with a widget, like in your photo app. I created it because it's a common feature on Mobile devices.
 ![Preview gif](Resources/git/gifs/Preview-horizontal.gif)
-Also, this component can take full page slot:
+
+Also, this component can take full page slot, that's not possible with a native ScrollBox:
 ![Preview gif](Resources/git/gifs/Adaptability.gif)
 
 # Requirements
-Manual installation require an Unreal C++ project and Unreal 5.3.
+Manual installation require an Unreal C++ project and Unreal Engine 5.3.
 # Setup
 At your root project folder, go to `Plugins` directory (create it if not present). 
 Create a folder named `MobileWidgetSwipe` and copy all the files of this project in.
 ![Directory image](Resources/git/images/PluginsDirectory.png)
 
-Open the project (restart if opened during the process) and go to `Edit/Plugins` and activate the new plugin MobileWidgetSwipe.
+Open the project (restart if opened during the previous step) and go to `Edit/Plugins` and activate the new plugin MobileWidgetSwipe.
 ![Plugin activation](Resources/git/images/PluginsManager.png)
 
 # Customization
 ## Orientation
-You can use this component Horizontally ou Vertically.
+You can use this component Horizontally or Vertically.
 ![Tab menu example](Resources/git/gifs/Preview-horizontal.gif) ![Tab menu example](Resources/git/gifs/Preview-vertical.gif)
 ## Swipe action
 ### Blend Func
@@ -53,7 +54,7 @@ You will find many other properties to set in the properties panel and in the ev
 
 # Usage Exemples
 ## Tab menu
-If you have a tab menu, it's painful for the user to click to the most upper part of the screen. You can ease the process with swipe feature.
+If you have a tab menu, it's painful for the user to click to the most upper part of the screen. You can ease the process with this swipe feature.
 
 ![Tab menu example](Resources/git/gifs/Example_tabmenu.gif)
 
