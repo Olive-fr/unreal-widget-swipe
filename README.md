@@ -21,7 +21,9 @@ You can use this component Horizontally ou Vertically.
 ## Swipe action
 ### Blend Func
 You can change the Blend function of the swipe animation.
+
 ![Directory image](Resources/git/images/Customization_SwipeBlendFuncs.png)
+
 As example, see these three preview with 1.0 speed
 #### Linear speed 1.0
 ![Tab menu example](Resources/git/gifs/Customization_linear_speed1.gif)
@@ -30,9 +32,29 @@ As example, see these three preview with 1.0 speed
 #### Sinusoidal out speed 1.0
 ![Tab menu example](Resources/git/gifs/Customization_sin_out_speed1.gif)
 
+# Blueprint
+## Children
+It's like any other unreal panel, place the SwipeBox in your hiearchy, and put your elements as children.
+
+![Plugin activation](Resources/git/images/Blueprint_UMG_Structure.png)
+
+## Event
+You can register your custom function with the Swipe Event.
+
+![Plugin activation](Resources/git/images/Blueprint_UMG_Event.png)
+
+## Change page
+You can modify the page with Blueprint.
+
+![Plugin activation](Resources/git/images/Blueprint_UMG_SetCurrentPage.png)
+
+## Other
+You will find many other properties to set in the properties panel and in the event graph.
+
 # Usage Exemples
 ## Tab menu
 If you have a tab menu, it's painful for the user to click to the most upper part of the screen. You can ease the process with swipe feature.
+
 ![Tab menu example](Resources/git/gifs/Example_tabmenu.gif)
 
 
