@@ -148,6 +148,32 @@ FVector2D SSwipePanel::ComputeDesiredSize(float) const
 }
 
 SSwipeBox::SSwipeBox()
+	: DesiredSwipeOffset(0),
+	  TickSwipeDelta(0),
+	  AmountSwipeedWhileRightMouseDown(0),
+	  PendingSwipeTriggerAmount(0),
+	  AllowOverSwipe(),
+	  AllowStickySwipe(),
+	  SlotStretchChildAsParentSize(false),
+	  BackPadSwipeing(false),
+	  FrontPadSwipeing(false),
+	  NavigationSwipePadding(0),
+	  NavigationDestination(),
+	  SwipeWhenFocusChanges(),
+	  Orientation(),
+	  Style(nullptr),
+	  SwipeBarStyle(nullptr),
+	  ConsumeMouseWheel(),
+	  LastSwipeTime(0),
+	  bAnimateWheelSwipeing(false),
+	  bShowSoftwareCursor(false),
+	  bSwipeBarIsExternal(false),
+	  bIsSwipeing(false),
+	  bAnimateSwipe(false),
+	  bSwipeToEnd(false),
+	  bIsSwipeingActiveTimerRegistered(false),
+	  bAllowsRightClickDragSwipeing(false),
+	  bTouchPanningCapture(false)
 {
 	VerticalSwipeBarSlot = nullptr;
 	bClippingProxy = true;

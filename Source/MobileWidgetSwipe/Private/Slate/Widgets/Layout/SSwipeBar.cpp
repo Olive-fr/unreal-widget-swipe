@@ -240,8 +240,22 @@ float SSwipeBar::ThumbSizeFraction() const
 }
 
 SSwipeBar::SSwipeBar()
-	: bDraggingThumb(false)
-	, DragGrabOffset( 0.0f )
+	: bDraggingThumb(false),
+	  DragGrabOffset(0.0f),
+	  Orientation(),
+	  bAlwaysShowSwipeBar(false),
+	  bAlwaysShowSwipeBarTrack(false),
+	  DragFocusCause(),
+	  bHideWhenNotInUse(false),
+	  bPreventThrottling(false),
+	  bIsSwipeing(false),
+	  LastInteractionTime(0),
+	  NormalThumbImage(nullptr),
+	  HoveredThumbImage(nullptr),
+	  DraggedThumbImage(nullptr),
+	  BackgroundBrush(nullptr),
+	  TopBrush(nullptr),
+	  BottomBrush(nullptr)
 {
 }
 
