@@ -8,13 +8,20 @@ float FStickyswipe::OvershootLooseMax(100.0f);
 float FStickyswipe::OvershootBounceRate(1500.0f);
 
 FStickyswipe::FStickyswipe()
-	: Easing(EEasingFunc::CircularInOut)
-	  , CurrentPageId(0)
-      , StickyswipeAmount(0.0f)
-	  , BlendExp(2.0)
-	  , Speed(1.0)
-	  , ScreenPercentDistanceUserChangePage(0.15)
-	  , Looseness(200)
+	: Easing(EEasingFunc::CircularInOut),
+	  BlendExp(2.0),
+	  Speed(1.0),
+	  CurrentPageId(0),
+	  ScreenPercentDistanceUserChangePage(0.15),
+	  Looseness(200),
+	  Orientation(),
+	  LastAllottedGeometry(nullptr),
+	  StickyswipeAmount(0.0f),
+	  StickyswipeAmountStart(0),
+	  AlphaTarget(0),
+	  SwipeAmountSinceUserMove(0),
+	  TargetPoint(0),
+	  MaxValue(0)
 {
 }
 
